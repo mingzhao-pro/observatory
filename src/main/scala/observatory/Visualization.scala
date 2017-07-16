@@ -82,18 +82,18 @@ object Visualization {
     temperatures.find(_._1.equals(location)) match {
       case Some(x) => x._2
       case None => {
-        val k = temperatures.par
+        val k = temperatures
           .map(x => (x._2, distanceToLoc(x._1, location)))
 
-        if (k.exists(_._2 < 1)) k.filter(_._2 < 1).toArray.apply(0)._1
-        else {
-          val mm = if(k.exists(_._2 < 3000)) k.filter(_._2 < 3000) else k
-          val q = mm.map(x => (pow(1 / x._2, 8), x._1))
+//        if (k.exists(_._2 < 1)) k.filter(_._2 < 1).toArray.apply(0)._1
+//        else {
+//          val mm = if(k.exists(_._2 < 3000)) k.filter(_._2 < 3000) else k
+          val q = k.map(x => (pow(1 / x._2, 8), x._1))
             .map(x => (x._1 * x._2, x._1))
             .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
           q._1 / q._2
         }
-      }
+//      }
     }
   }
 

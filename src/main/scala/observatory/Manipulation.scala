@@ -11,9 +11,9 @@ object Manipulation {
     *         returns the predicted temperature at this location
     */
   def makeGrid(temperatures: Iterable[(Location, Double)]): (Int, Int) => Double = {
-//    def f(a: Int, b: Int): Double = Visualization.predictTemperature(temperatures, Location(a, b))
-//    f
-    ???
+    def f(a: Int, b: Int): Double = Visualization.predictTemperature(temperatures, Location(a, b))
+    f
+
   }
 
   /**
@@ -27,7 +27,7 @@ object Manipulation {
 //      aa._1 / aa._2
 //    }
 //    f
-    ???
+
   }
 
   /**

@@ -1,5 +1,7 @@
 package observatory
 
+import java.io.File
+
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -21,7 +23,8 @@ class VisualizationTest extends FunSuite with Checkers {
   test("creation of image") {
     val color = Array(white, red, yellow, sky, blue, violet, purple, black)
     val locTemps = Extraction.locationYearlyAverageRecords(Extraction.locateTemperatures(2000, "/stations.csv", "/2000.csv"))
-    Visualization.visualize(locTemps, color.toIterable)
+    val image = Visualization.visualize(locTemps, color.toIterable)
+    image.output(new File("/home/saga/IdeaProjects/observatory/target/mage.png"))
   }
 }
 

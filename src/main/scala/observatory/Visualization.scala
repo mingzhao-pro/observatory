@@ -163,12 +163,7 @@ object Visualization {
       .map(x => Pixel(x.red, x.green, x.blue, 127))
       .toArray
 
-
-    val image = Image(Lon_MAX, Lat_MAX, pixelArray, 2)
-  //  image.output(new File("/home/saga/IdeaProjects/Capstone_Project/target/mage.png"))
-                image.output(new File("target/mage.png"))
-    image
-
+   Image(Lon_MAX, Lat_MAX, pixelArray, 2)
   }
 }
 

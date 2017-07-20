@@ -40,8 +40,7 @@ object Visualization2 {
     * @param y      Y value of the tile to visualize
     * @return The image of the tile at (x, y, zoom) showing the grid using the given color scale
     */
-  def visualizeGrid(
-                     grid: (Int, Int) => Double,
+  def visualizeGrid(grid: (Int, Int) => Double,
                      colors: Iterable[(Double, Color)],
                      zoom: Int,
                      x: Int,
@@ -60,17 +59,14 @@ object Visualization2 {
 
     for (lat <- 0 until TILE_SIZE; lon <- 0 until TILE_SIZE) {
       val location = transform(x * 256 + lon, y * 256 + lat)
-      val lat0 = math.floor(location.lat).toInt
-      val lon0 = math.ceil(location.lon).toInt
+      val lat0 = math.ceil(location.lat) - location.lat
+      val lon0 = location.lon - math.floor(location.lon)
+      val temp00 = grid(math.ceil(location.lat).toInt, math.floor(location.lon).toInt) // top-left
+      val temp10 = grid(math.ceil(location.lat).toInt, math.ceil(location.lon).toInt) // top-right
+      val temp01 = grid(math.floor(location.lat).toInt, math.floor(location.lon).toInt) // bottom-left
+      val temp11 = grid(math.floor(location.lat).toInt, math.ceil(location.lon).toInt) // bottom-right
 
-      val x0 = math.abs(location.lon - lon0).toInt
-      val y0 = math.abs(location.lat - lat0).toInt
-      val temp00 = grid(lat0, lon0) // top-left
-      val temp10 = grid(lat0, lon0 + 1) // top-right
-      val temp01 = grid(lat0 - 1, lon0) // bottom-left
-      val temp11 = grid(lat0 - 1, lon0 + 1) // bottom-right
-
-      locationArray(lat * TILE_SIZE + lon) = bilinearInterpolation(x0, y0, temp00, temp01, temp10, temp11)
+      locationArray(lat * TILE_SIZE + lon) = bilinearInterpolation(lon0, lat0, temp00, temp01, temp10, temp11)
     }
 
     val pixelArray = locationArray.par

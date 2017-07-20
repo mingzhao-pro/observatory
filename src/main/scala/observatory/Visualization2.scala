@@ -29,7 +29,7 @@ object Visualization2 {
     val y0 = (1 - x) * d00 + x * d10
     val y1 = (1 - x) * d01 + x * d11
 
-    (1 - y) * y1 + y * y0
+    (1 - y) * y0 + y * y1
   }
 
   /**

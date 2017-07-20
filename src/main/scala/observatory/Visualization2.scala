@@ -19,17 +19,17 @@ object Visualization2 {
     *         See https://en.wikipedia.org/wiki/Bilinear_interpolation#Unit_Square
     */
   def bilinearInterpolation(
-                             x: Double,
-                             y: Double,
+                             x: Double, // lon
+                             y: Double, // lat
                              d00: Double,
                              d01: Double,
                              d10: Double,
                              d11: Double
                            ): Double = {
-    val x_y1 = (1 - x) * d00 + x * d10
-    val x_y2 = (1 - x) * d01 + x * d11
+    val y0 = (1 - x) * d00 + x * d10
+    val y1 = (1 - x) * d01 + x * d11
 
-    (1 - y) * x_y1 + y * x_y2
+    (1 - y) * y1 + y * y0
   }
 
   /**
@@ -47,30 +47,39 @@ object Visualization2 {
                      x: Int,
                      y: Int
                    ): Image = {
-    val TILE_SIZE = 256
-    import org.apache.commons.math3.util.FastMath._
-    val zoomRatio = pow(2, zoom)
-    val LatStep = 170.1022 / zoomRatio / TILE_SIZE
-    val LonStep = 360 / zoomRatio / TILE_SIZE
 
-    val locationArray = new Array[Location](TILE_SIZE * TILE_SIZE)
-    val topLeftLocation = tileLocation(zoom, x, y)
-
-    for (lat <- 0 until TILE_SIZE; lon <- 0 until TILE_SIZE) {
-      locationArray(lat * TILE_SIZE + lon) =
-        Location(topLeftLocation.lat - LatStep * lat, topLeftLocation.lon + LonStep * lon)
+    def transform(x_index: Int, y_index: Int) = {
+      val lon = math.toDegrees(x_index * math.Pi / 128 / math.pow(2, zoom) - math.Pi)
+      val lat = math.toDegrees((math.atan(math.pow(math.E, math.Pi - y_index * math.Pi / 128 / math.pow(2, zoom))) - math.Pi / 4) * 2)
+      //      println("lat " + lat  + " lon " + lon)
+      Location(lat, lon)
     }
 
-    val pixelArray =
-      locationArray.map(location => (location.lat, location.lon))
-        .map(x => (x._1, x._2, math.floor(x._1), math.ceil(x._1), math.floor(x._2), math.ceil(x._2)))        //x0,x1,y0,y1,
-        .map(x => bilinearInterpolation(x._1,x._2,x._3,x._4,x._5,x._6))
-        .map(Visualization.interpolateColor(colors, _))
-        .map(x => Pixel(x.red, x.green, x.blue, 127))
+    val TILE_SIZE = 256
+    val locationArray = new Array[Double](TILE_SIZE * TILE_SIZE)
+
+    for (lat <- 0 until TILE_SIZE; lon <- 0 until TILE_SIZE) {
+      val location = transform(x * 256 + lon, y * 256 + lat)
+      val lat0 = math.floor(location.lat).toInt
+      val lon0 = math.floor(location.lon).toInt
+
+      val x0 = (location.lon - lon0).toInt
+      val y0 = (location.lat - lat0).toInt
+      val temp00 = grid(lat0, lon0) // top-left
+      val temp10 = grid(lat0, lon0 + 1) // top-right
+      val temp01 = grid(lat0 - 1, lon0) // bottom-left
+      val temp11 = grid(lat0 - 1, lon0 + 1) // bottom-right
+
+      locationArray(lat * TILE_SIZE + lon) = bilinearInterpolation(x0, y0, temp00, temp01, temp10, temp11)
+    }
+
+    val pixelArray = locationArray.par
+      .map(x => Visualization.interpolateColor(colors, x))
+      .map(x => Pixel(x.red, x.green, x.blue, 127))
+      .toArray
 
     Image(TILE_SIZE, TILE_SIZE, pixelArray, 2)
   }
-
 }
 
 

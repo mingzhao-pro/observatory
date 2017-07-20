@@ -30,25 +30,22 @@ object Interaction {
     * @return A 256×256 image showing the contents of the tile defined by `x`, `y` and `zooms`
     */
   def tile(temperatures: Iterable[(Location, Double)], colors: Iterable[(Double, Color)], zoom: Int, x: Int, y: Int): Image = {
+
+    def transform(x_index: Int, y_index: Int) = {
+      val lon = math.toDegrees(x_index * math.Pi / 128 / math.pow(2, zoom) - math.Pi)
+      val lat = math.toDegrees((math.atan(math.pow(math.E, math.Pi - y_index * math.Pi / 128 / math.pow(2, zoom))) - math.Pi / 4) * 2)
+//      println("lat " + lat  + " lon " + lon)
+      Location(lat, lon)
+    }
     val TILE_SIZE = 256
-//    val LAT_MAX = 85.0511
-//    val LAT_MIN = -85.0511
-    import org.apache.commons.math3.util.FastMath._
-    val zoomRatio = pow(2, zoom)
-    val LatStep = 170.1022 / zoomRatio / TILE_SIZE
-    val LonStep = 360 / zoomRatio / TILE_SIZE
 
     val locationArray = new Array[Location](TILE_SIZE * TILE_SIZE)
-    val topLeftLocation = tileLocation(zoom, x, y)
 
     for (lat <- 0 until TILE_SIZE; lon <- 0 until TILE_SIZE) {
-      locationArray(lat * TILE_SIZE + lon) =
-        Location(topLeftLocation.lat - LatStep * lat, topLeftLocation.lon + LonStep * lon)
+      locationArray(lat * TILE_SIZE + lon) = transform(x * 256 + lon, y * 256 + lat)
     }
 
     val pixelArray = locationArray
-//      .map(x => if (x.lat > LAT_MAX) Location(LAT_MAX, x.lon)
-//      else if (x.lat < LAT_MIN) Location(LAT_MIN, x.lon) else x)
       .par.map(x => Visualization.predictTemperature(temperatures, x))
       .map(x => Visualization.interpolateColor(colors, x))
       .map(x => Pixel(x.red, x.green, x.blue, 127))

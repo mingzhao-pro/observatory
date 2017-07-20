@@ -61,10 +61,10 @@ object Visualization2 {
     for (lat <- 0 until TILE_SIZE; lon <- 0 until TILE_SIZE) {
       val location = transform(x * 256 + lon, y * 256 + lat)
       val lat0 = math.floor(location.lat).toInt
-      val lon0 = math.floor(location.lon).toInt
+      val lon0 = math.ceil(location.lon).toInt
 
-      val x0 = (location.lon - lon0).toInt
-      val y0 = (location.lat - lat0).toInt
+      val x0 = math.abs(location.lon - lon0).toInt
+      val y0 = math.abs(location.lat - lat0).toInt
       val temp00 = grid(lat0, lon0) // top-left
       val temp10 = grid(lat0, lon0 + 1) // top-right
       val temp01 = grid(lat0 - 1, lon0) // bottom-left

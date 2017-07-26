@@ -11,38 +11,40 @@ object Main extends App {
 
   val logger = LoggerFactory.getLogger(Main.getClass)
   val filePath = "src/main/resources/"
-  val fieldSTN = StructField("stn", StringType, nullable = true)
-  val fieldWBAN = StructField("wban", StringType, nullable = true)
-  val fieldLAT = StructField("lat", DoubleType, nullable = false)
-  val fieldLON = StructField("lon", DoubleType, nullable = false)
-  val fieldMonth = StructField("month", IntegerType, nullable = false)
-  val fieldDay = StructField("day", IntegerType, nullable = false)
-  val fieldTemp = StructField("temp", DoubleType, nullable = false)
+
   val year = 1975
 
-  def fToC(f: Double) = math.round((f - 32) * 5 / 9 * 10) / 10.0
 
-  case class Station(stn: String, wban: String, lat: Integer, lon: Integer)
+  // Inner usage methods
+  private def fToC(f: Double) = math.round((f - 32) * 5 / 9 * 10) / 10.0
+  private def predicte(s: Station) = s.lat != null && s.lon != null
 
-  case class Temperature(stn: String, wban: String, month: String, day: String, temperature: String)
-
+  // Spark Context creation
   val conf = new SparkConf().setMaster("local[8]").setAppName("widipedia")
   val spark = SparkSession.builder().config(conf).getOrCreate
-
   import spark.implicits._
 
-  // Encoders are created for case classes
+  // Case classes and encoders
+  case class Station(stn: String, wban: String, lat: Integer, lon: Integer)
+  case class Temperature(stn: String, wban: String, month: Integer, day: Integer, temperature: Double)
   val stationDSEncoder = Seq(Station("", "", 0, 0)).toDS
+  val tempDSEncoder = Seq(Temperature("", "", 0, 0, 0)).toDS
+
+  // Creation of stationDS and temperatureDS
   val stationDS = spark.read.option("header", "true").csv(filePath + "stations.csv")
     .withColumn("lat", 'lat.cast(IntegerType))
     .withColumn("lon", 'lon.cast(IntegerType))
     .as[Station]
   println(stationDS.count)
-
-  private def predicte(s: Station) = s.lat != null && s.lon != null
-
   val validStations =  stationDS.filter(predicte _)
   println(validStations.count)
+
+  val temperatureDS = spark.read.option("header", "true").csv(filePath + year + ".csv")
+    .withColumn("month", 'month.cast(IntegerType))
+      .withColumn("day", 'day.cast(IntegerType))
+    .withColumn("temp", 'temp.cast(DoubleType))
+    .as[Temperature]
+  println(temperatureDS.count)
 
 //  stationDS.filter('lat.isNotNull || 'lon.isNotNull)
 //  println(stationDS.count)

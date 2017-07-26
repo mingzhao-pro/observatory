@@ -1,6 +1,9 @@
 package observatory
 
 import java.time.LocalDate
+
+import org.apache.spark.sql.SparkSession
+
 import scala.io.Source
 
 /**
@@ -8,6 +11,10 @@ import scala.io.Source
   */
 object Extraction {
 
+//  val spark = SparkSession.builder.appName("Coursera Project").getOrCreate
+
+  // For implicit conversions like converting RDDs to DataFrames
+//  import spark.implicits._
   /**
     * @param year             Year number
     * @param stationsFile     Path of the stations resource file to use (e.g. "/stations.csv")
@@ -15,6 +22,8 @@ object Extraction {
     * @return A sequence containing triplets (date, location, temperature)
     */
   def locateTemperatures(year: Int, stationsFile: String, temperaturesFile: String): Iterable[(LocalDate, Location, Double)] = {
+
+//    val stationDf = spark.read.csv(stationsFile)
 
     //concatenate STN and WBAN to be an comparable id(tuple is not easy to compare), add # to avoid coincidence
     val SEPERATOR = "#"
@@ -34,7 +43,7 @@ object Extraction {
       * @param info station: STN	WBAN Latitude	Longitude
       * @return check if the station information is valid, no GPS info means invalid
       */
-    def isValidStation(info: String) = info.split(",").length > 3
+    def isValidStation(info: String) = info.split(",").length >= 3
 
     val stations = Source.fromInputStream(this.getClass.getResourceAsStream(stationsFile)).getLines
     //Map(stationId -> List(lat, lon))

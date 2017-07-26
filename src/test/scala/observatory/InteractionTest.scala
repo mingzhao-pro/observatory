@@ -32,18 +32,27 @@ class InteractionTest extends FunSuite with Checkers {
 
   test("creation of tile list") {
 
-    val colors = Array(white, red, yellow, sky, blue, violet, purple, black)
-    val year = 1975
-    val locTemps = Extraction.locateTemperatures(year, "/stations.csv", "/" + year.toString + ".csv")
-    val yearlyData = Extraction.locationYearlyAverageRecords(locTemps)
-    val datum = Array((1975, yearlyData))
+    val locationsTemperatures = List(
+      (new Location(45.0, -90.0), 20.0)
+      , (new Location(45.0, 90.0), 0.0)
+      , (new Location(0.0, 0.0), 10.0)
+      , (new Location(-45.0, -90.0), 0.0)
+      , (new Location(-45.0, 90.0), 20.0)
+    )
 
-    def calculate(year: Int, zoom: Int, x: Int, y: Int, data: Iterable[(Location, Double)]) = {
-      val image = Interaction.tile(data, colors, zoom, x, y)
-      image.output(new File("/home/user/IdeaProjects/observatory/tiles/temperatures/"+ year + "/" + zoom + "/" + x + "-" + y + ".png"))
+    val colorMap = List(
+      (0.0, Color(255, 0, 0))
+      , (10.0, Color(0, 255, 0))
+      , (20.0, Color(0, 0, 255))
+    )
+
+
+    val z = 0
+    val n = math.pow(2, z).toInt
+    for (x <- 0 until n; y <- 0 until n) {
+      val image = Interaction.tile(locationsTemperatures, colorMap, z, x, y)
+      image.output(new File("C:\\Users\\xxtu716\\IdeaProjects\\observatory\\tiles\\temperatures\\" + z + "-" + x + "-" + y + ".png"))
     }
-
-    Interaction.generateTiles(datum, calculate)
   }
 
 }

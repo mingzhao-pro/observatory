@@ -48,7 +48,6 @@ object Extraction {
     val stations = Source.fromInputStream(this.getClass.getResourceAsStream(stationsFile)).getLines
     //Map(stationId -> List(lat, lon))
     val validStations = stations.filter(isValidStation).map(extract).toMap
-
     val temperatures = Source.fromInputStream(this.getClass.getResourceAsStream(temperaturesFile)).getLines
     // (stationId, List(Month, Day, Temp))
     val tempOfDates = temperatures.map(extract)

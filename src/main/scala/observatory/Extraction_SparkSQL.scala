@@ -1,8 +1,8 @@
 package observatory
 
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.types.{DoubleType, IntegerType}
+import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.types.DoubleType
 
 object Extraction_SparkSQL {
 
@@ -19,18 +19,19 @@ object Extraction_SparkSQL {
   private val dfReader = spark.read.option("header", "true")
 
   // Case classes and encoders
-  trait Info
+  trait WeatherInfo
 
-  case class Station(stn: String, wban: String, lat: BoxedDouble, lon: BoxedDouble) extends Info
+  case class Station(var stn: String, var wban: String, lat: String, lon: String) extends WeatherInfo
 
-  case class LocTemp(stn: String, wban: String, month: Integer, day: Integer, temp: Double) extends Info
+  case class LocTemp(stn: String, wban: String, month: String, day: String, temp: Double) extends WeatherInfo
+  case class Tu(stn: String, wban: String, temp: Double)
 
-  private val stationDSEncoder = Seq(Station("", "", 0d, 0d)).toDS
-  private val tempDSEncoder = Seq(LocTemp("", "", 0, 0, 0)).toDS
+  private val stationDSEncoder = Seq(Station("", "", "", "")).toDS
+  private val tempDSEncoder = Seq(LocTemp("", "", "", "", 0)).toDS
 
-  private def predicte(info: Info): Boolean = info match {
-    case Station(_, _, lat, lon) => lat != null && lon != null
-    case LocTemp(_, _, _, _, temp) => temp != 9999.9
+  private def predicte(info: WeatherInfo): Boolean = info match {
+    case Station(stn, wban, lat, lon) => lat != null && lon != null && !(stn == null && wban == null)
+    case LocTemp(stn, wban, _, _, temp) => temp != 9999.9 && !(stn == null && wban == null)
   }
 
   /**
@@ -41,37 +42,40 @@ object Extraction_SparkSQL {
     */
   private def fToC(f: Double) = math.round((f - 32) * 5 / 9 * 10) / 10.0
 
+  private def transformStation(s: Station) = s match {
+    case Station(null, wban, lat, lon) => Station("_", wban, lat, lon)
+    case Station(stn, null, lat, lon) => Station(stn, "_", lat, lon)
+    case _ => s
+  }
+
+  private def transformTemp(t: LocTemp) = t match {
+    case LocTemp(null, wban, month, day, temp) => LocTemp("_", wban, month, day, temp)
+    case LocTemp(stn, null, month, day, temp) => LocTemp(stn, "_", month, day, temp)
+    case _ => t
+  }
+
   private def getValidStations() = {
     dfReader.csv(filePath + "stations.csv")
-      .withColumn("lat", 'lat.cast(DoubleType))
-      .withColumn("lon", 'lon.cast(DoubleType))
       .as[Station]
       .filter(predicte _)
+      .map(transformStation)
+  }
+
+  private def getValidLocTemp(year: Int) = {
+    dfReader.csv(filePath + year + ".csv")
+      .withColumn("temp", 'temp.cast(DoubleType))
+      .as[LocTemp]
+      .filter(predicte _)
+      .map(transformTemp)
   }
 
   def extraction(year: Int) = {
     val validStations = getValidStations()
-    println("valid stations " + validStations.count)
+    val validTemps = getValidLocTemp(1975).groupBy('stn, 'wban).avg("temp").toDF("stn", "wban", "temp").as[Tu]
 
-    val temperatureDS = dfReader.csv(filePath + year + ".csv")
-      .withColumn("month", 'month.cast(IntegerType))
-      .withColumn("day", 'day.cast(IntegerType))
-      .withColumn("temp", 'temp.cast(DoubleType))
-      .as[LocTemp]
-    val validateTemps = temperatureDS.filter(predicte _)
-    println("valid tem " + validateTemps.count)
+    val locTempInfo = validTemps.join(validStations,
+      validTemps("stn") === validStations("stn") && validTemps("wban") === validStations("wban"), "inner")
 
-    val locTempInfo = validateTemps.join(validStations,
-      'stn && 'wban
-      , "leftouter")
-
-    println(locTempInfo.show(150))
     println(locTempInfo.count)
-    val a = locTempInfo.select('lat, 'lon, 'temp, 'stn, 'wban).groupBy('stn, 'wban).avg("temp")
-    println(a.show(30))
-    println(a.count)
-    val b = a.map(row => (Location(row.getAs[Double]("lat"), row.getAs[Double]("lon")), row.getAs[Double]("avg(temp)")))
-
-    println(" -" + b.count + "-")
   }
 }

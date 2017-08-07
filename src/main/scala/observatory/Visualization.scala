@@ -9,34 +9,19 @@ import com.sksamuel.scrimage.{Image, Pixel}
   */
 object Visualization {
 
-  //  def acos(x: Float): Float = {
-  //    val negate : Float = float(x < 0)
-  //    val abs_x = math.abs(x)
-  //    var ret : Float = -0.0187293F
-  //    ret = ret * abs_x
-  //    ret = ret + 0.0742610F
-  //    ret = ret * abs_x
-  //    ret = ret - 0.2121144F
-  //    ret = ret * abs_x
-  //    ret = ret + 1.5707288F
-  //    ret = ret * (math.sqrt(1.0 - abs_x)).toFloat
-  //    ret = ret - 2 * negate * ret
-  //    negate * 3.14159265358979F + ret
-  //  }
-
   class LocMath(loc: Location) {
     val ratio = 57.2958
 
     import org.apache.commons.math3.util.FastMath._
 
-    val sin_lat = sin(loc.lat / ratio)
-    val cos_lat = cos(loc.lat / ratio)
-    val sin_lon = sin(loc.lon / ratio)
-    val cos_lon = cos(loc.lon / ratio)
+    val sin_lat: Double = sin(loc.lat / ratio)
+    val cos_lat: Double = cos(loc.lat / ratio)
+    val sin_lon: Double = sin(loc.lon / ratio)
+    val cos_lon: Double = cos(loc.lon / ratio)
   }
 
   //(Location, sin_lat, cos_lat, sin_lon, cos_lon)
-  var locMathMap = Map[Location, LocMath]()
+  var locMathMap: Map[Location, LocMath] = Map[Location, LocMath]()
 
   def distanceToLoc(a: Location, loc: Location): Double = {
         /**

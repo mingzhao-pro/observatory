@@ -33,7 +33,6 @@ object Extraction_SparkSQL {
         val modifiedStn = if (stn == null) "_" else stn
         val wban = row.getAs[String]("wban")
         val modifiedWban = if (wban == null) "_" else wban
-
         (modifiedStn + "_" + modifiedWban, Location(row.getAs[Double]("lat"), row.getAs[Double]("lon")))
       }).toDF("stationId", "location")
   }
@@ -50,7 +49,7 @@ object Extraction_SparkSQL {
         val modifiedWban = if (wban == null) "_" else wban
         (modifiedStn + "_" + modifiedWban, fToC(row.getAs[Double]("temp")))
       })
-      .groupBy("_1").avg("_2")
+      .groupBy("_1").avg("_2")//_1 is stationId, _2 is temperature
       .toDF("stationId", "temp")
   }
 
@@ -58,6 +57,6 @@ object Extraction_SparkSQL {
     val validStations = loadValidStations()
     val validTemps = getValidLocTemp(1975)
     validTemps.join(validStations,
-      validTemps("stationId") === validStations("stationId"), "inner")
+      validTemps("stationId") === validStations("stationId"), "inner").select('location, 'temp)
   }
 }

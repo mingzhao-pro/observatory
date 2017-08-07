@@ -22,46 +22,7 @@ object Extraction {
     * @return A sequence containing triplets (date, location, temperature)
     */
   def locateTemperatures(year: Int, stationsFile: String, temperaturesFile: String): Iterable[(LocalDate, Location, Double)] = {
-
-//    val stationDf = spark.read.csv(stationsFile)
-
-    //concatenate STN and WBAN to be an comparable id(tuple is not easy to compare), add # to avoid coincidence
-    val SEPERATOR = "#"
-    /**
-      *
-      * @param f Temperature in degrees Fahrenheit
-      * @return Temperature in degrees Celsius (round to one scale)
-      */
-    def fToC(f: Double) = math.round((f - 32) * 5 / 9 * 10) / 10.0
-
-    def extract(line: String) = {
-      val info = line.split(",")
-      (info.head + SEPERATOR + info.tail.head, info.tail.tail)
-    }
-    /**
-      *
-      * @param info station: STN	WBAN Latitude	Longitude
-      * @return check if the station information is valid, no GPS info means invalid
-      */
-    def isValidStation(info: String) = info.split(",").length >= 3
-
-    val stations = Source.fromInputStream(this.getClass.getResourceAsStream(stationsFile)).getLines
-    //Map(stationId -> List(lat, lon))
-    val validStations = stations.filter(isValidStation).map(extract).toMap
-    val temperatures = Source.fromInputStream(this.getClass.getResourceAsStream(temperaturesFile)).getLines
-    // (stationId, List(Month, Day, Temp))
-    val tempOfDates = temperatures.map(extract)
-
-    val a = for {
-      tempOfDate <- tempOfDates
-      if validStations.keySet.contains(tempOfDate._1)
-    } yield {
-      val date = LocalDate.of(year, tempOfDate._2.head.toInt, tempOfDate._2(1).toInt)
-      val locInfo = validStations(tempOfDate._1)
-      val temp = fToC(tempOfDate._2.last.toDouble)
-      (date, Location(locInfo.head.toDouble, locInfo(1).toDouble), temp)
-    }
-    a.toIterable
+    ???
   }
 
   /**

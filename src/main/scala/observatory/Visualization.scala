@@ -1,7 +1,5 @@
 package observatory
 
-import java.io.File
-
 import com.sksamuel.scrimage.{Image, Pixel}
 
 /**
@@ -24,36 +22,36 @@ object Visualization {
   var locMathMap: Map[Location, LocMath] = Map[Location, LocMath]()
 
   def distanceToLoc(a: Location, loc: Location): Double = {
-        /**
-          * get locMath object for location a and add to locMathMap
-          *
-          * @param a location
-          * @return generated locMath object
-          */
-        def getLocMath(a: Location) = locMathMap.get(a) match {
-          case Some(x) => x
-          case None => {
-            val element = new LocMath(a)
-            locMathMap += (a -> element)
-            element
-          }
-        }
+    /**
+      * get locMath object for location a and add to locMathMap
+      *
+      * @param a location
+      * @return generated locMath object
+      */
+    def getLocMath(a: Location) = locMathMap.get(a) match {
+      case Some(x) => x
+      case None => {
+        val element = new LocMath(a)
+        locMathMap += (a -> element)
+        element
+      }
+    }
 
-        val tempA = getLocMath(a)
-        val tempLoc = getLocMath(loc)
+    val tempA = getLocMath(a)
+    val tempLoc = getLocMath(loc)
 
-        // A 1, Loc 2
-        val x = tempLoc.cos_lat * tempLoc.cos_lon - tempA.cos_lat * tempA.cos_lon
-        val y = tempLoc.cos_lat * tempLoc.sin_lon - tempA.cos_lat * tempA.sin_lon
-        val z = tempLoc.sin_lat - tempA.sin_lat
+    // A 1, Loc 2
+    val x = tempLoc.cos_lat * tempLoc.cos_lon - tempA.cos_lat * tempA.cos_lon
+    val y = tempLoc.cos_lat * tempLoc.sin_lon - tempA.cos_lat * tempA.sin_lon
+    val z = tempLoc.sin_lat - tempA.sin_lat
 
-        import org.apache.commons.math3.util.FastMath._
-        val bigC = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))
-        val angle = asin(bigC / 2) * 2
-        angle * 6371
-//    import org.apache.commons.math3.util.FastMath._
-//    val ratio = 57.2958
-//    acos(sin(a.lat / ratio) * sin(loc.lat / ratio) + cos(a.lat / ratio) * cos(loc.lat / ratio) * cos(abs(loc.lon / ratio - a.lon / ratio))) * 6371
+    import org.apache.commons.math3.util.FastMath._
+    val bigC = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))
+    val angle = asin(bigC / 2) * 2
+    angle * 6371
+    //    import org.apache.commons.math3.util.FastMath._
+    //    val ratio = 57.2958
+    //    acos(sin(a.lat / ratio) * sin(loc.lat / ratio) + cos(a.lat / ratio) * cos(loc.lat / ratio) * cos(abs(loc.lon / ratio - a.lon / ratio))) * 6371
   }
 
   /**
@@ -70,15 +68,15 @@ object Visualization {
         val k = temperatures
           .map(x => (x._2, distanceToLoc(x._1, location)))
 
-//        if (k.exists(_._2 < 1)) k.filter(_._2 < 1).toArray.apply(0)._1
-//        else {
-//          val mm = if(k.exists(_._2 < 3000)) k.filter(_._2 < 3000) else k
-          val q = k.map(x => (pow(1 / x._2, 8), x._1))
-            .map(x => (x._1 * x._2, x._1))
-            .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
-          q._1 / q._2
-        }
-//      }
+        //        if (k.exists(_._2 < 1)) k.filter(_._2 < 1).toArray.apply(0)._1
+        //        else {
+        //          val mm = if(k.exists(_._2 < 3000)) k.filter(_._2 < 3000) else k
+        val q = k.map(x => (pow(1 / x._2, 8), x._1))
+          .map(x => (x._1 * x._2, x._1))
+          .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
+        q._1 / q._2
+      }
+      //      }
     }
   }
 
@@ -136,7 +134,7 @@ object Visualization {
     import org.apache.commons.math3.util.FastMath._
     val locationArray = new Array[(Int, Int)](Lat_MAX * Lon_MAX)
     // (Location, temp)
-    val pairs = temperatures.map(x => (Location(round(x._1.lat * 10.0) / 10.0,  round(x._1.lon * 10.0) / 10.0), x._2))
+    val pairs = temperatures.map(x => (Location(round(x._1.lat * 10.0) / 10.0, round(x._1.lon * 10.0) / 10.0), x._2))
 
     for (lat <- -89 to 90; lon <- -180 to 179) {
       locationArray((lat + 89) * 360 + (lon + 180)) = (1 - lat, lon)
@@ -148,7 +146,7 @@ object Visualization {
       .map(x => Pixel(x.red, x.green, x.blue, 127))
       .toArray
 
-   Image(Lon_MAX, Lat_MAX, pixelArray, 2)
+    Image(Lon_MAX, Lat_MAX, pixelArray, 2)
   }
 }
 

@@ -21,10 +21,13 @@ class VisualizationTest extends FunSuite with Checkers {
 
 
   test("creation of image") {
-    val color = Array(white, red, yellow, sky, blue, violet, purple, black)
+    val colors = Array(white, red, yellow, sky, blue, violet, purple, black).toIterable
     val locTemps = Extraction.locationYearlyAverageRecords(Extraction.locateTemperatures(2000, "/stations.csv", "/2000.csv"))
-    val image = Visualization.visualize(locTemps, color.toIterable)
-    image.output(new File("/home/saga/IdeaProjects/observatory/target/mage.png"))
+    val image = Visualization.visualize(locTemps, colors)
+    image.output(new File("c:\\Users\\xxtu716\\IdeaProjects\\observatory\\target\\mage.png"))
+
+    val image_sql = Extraction_SparkSQL.visualize(Extraction_SparkSQL.extraction(1975), colors)
+    image_sql.output(new File("c:\\Users\\xxtu716\\IdeaProjects\\observatory\\target\\mage_sql.png"))
   }
 }
 
